@@ -344,9 +344,9 @@
             mat4.identity(obj_vec[i].mvMatrix);
             obj_vec[i].translation();
             obj_vec[i].rotation();
-            obj_vec[i].shear();
             obj_vec[i].scale();
-
+            obj_vec[i].shear();
+            
             console.log(obj_vec[i].translation_vec);
 
             setMatrixUniforms(obj_vec[i]);
@@ -494,15 +494,15 @@
             </tr>
             <tr>
                 <td>Trans.</td>
-                <td><input id="0_transX" type="range" autocomplete="off" value="0." max="50." min="-50." oninput="update_trans(0)"></td>
-                <td><input id="0_transY" type="range" autocomplete="off" value="0." max="50." min="-50." oninput="update_trans(0)"></td>
-                <td><input id="0_transZ" type="range" autocomplete="off" value="-15." max="0." min="-120." oninput="update_trans(0)"></td>
+                <td><input id="0_transX" type="range" autocomplete="off" value="0." min="-50." max="50."  oninput="update_trans(0)"></td>
+                <td><input id="0_transY" type="range" autocomplete="off" value="0." min="-50." max="50."  oninput="update_trans(0)"></td>
+                <td><input id="0_transZ" type="range" autocomplete="off" value="-15." min="-120." max="0."  oninput="update_trans(0)"></td>
             </tr>
             <tr>
                 <td>Rotate</td>
-                <td><input id="0_rotateX" type="range" autocomplete="off" value="0." max="180." min="-180." oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateY" type="range" autocomplete="off" value="0." max="180." min="-180." oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." max="180." min="-180." oninput="update_rotate(0)"></td>
+                <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="-180." max="180."  oninput="update_rotate(0)"></td>
+                <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="-180." max="180."  oninput="update_rotate(0)"></td>
+                <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="-180." max="180."  oninput="update_rotate(0)"></td>
             </tr>
         </table>
     </p>
