@@ -435,17 +435,17 @@
     }
     
     function update_trans(objid){
-        var tx = document.getElementById(objid + "_transX").value;
-        var ty = document.getElementById(objid + "_transY").value;
-        var tz = document.getElementById(objid + "_transZ").value;
+        var tx = ((document.getElementById(objid + "_transX").value)*(60.0)/(100.0))-30.0;
+        var ty = ((document.getElementById(objid + "_transY").value)*(60.0)/(100.0))-30.0;
+        var tz = ((document.getElementById(objid + "_transZ").value)*(15-100)/(100.0))-15.0;
         console.log("TRANS: %f, %f, %f",tx,ty,tz);
         obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
     }
 
     function update_rotate(objid){
-        var rx = document.getElementById(objid + "_rotateX").value;
-        var ry = document.getElementById(objid + "_rotateY").value;
-        var rz = document.getElementById(objid + "_rotateZ").value;
+        var rx = ((document.getElementById(objid + "_rotateX").value))*(360.0/100.0)-180.0;
+        var ry = ((document.getElementById(objid + "_rotateY").value))*(360.0/100.0)-180.0;
+        var rz = ((document.getElementById(objid + "_rotateZ").value))*(360.0/100.0)-180.0;
         console.log("ROTATE: %f, %f, %f",rx,ry,rz);
         obj_vec[objid].rotate_vec = vec3.create([rx, ry, rz]);
     }
@@ -495,15 +495,25 @@
             </tr>
             <tr>
                 <td>Trans.</td>
+                <!--
                 <td><input id="0_transX" type="range" autocomplete="off" value="0." min="-50." max="50." step="any" oninput="update_trans(0)"></td>
                 <td><input id="0_transY" type="range" autocomplete="off" value="0." min="-50." max="50." step="any"  oninput="update_trans(0)"></td>
                 <td><input id="0_transZ" type="range" autocomplete="off" value="-15." min="-120." max="0." step="any"  oninput="update_trans(0)"></td>
+                -->
+                <td><input id="0_transX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
+                <td><input id="0_transY" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
+                <td><input id="0_transZ" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
             </tr>
             <tr>
                 <td>Rotate</td>
+                <!--
                 <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="-180." max="180." step="any"  oninput="update_rotate(0)"></td>
                 <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="-180." max="180." step="any" oninput="update_rotate(0)"></td>
                 <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="-180." max="180." step="any" oninput="update_rotate(0)"></td>
+                -->
+                <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any"  oninput="update_rotate(0)"></td>
+                <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
+                <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
             </tr>
         </table>
     </p>
