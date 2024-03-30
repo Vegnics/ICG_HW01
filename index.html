@@ -413,7 +413,7 @@
     }
 
     function update_ambient_light(paramid){
-        if(paramid == 0) ka = document.getElementById("am_ka").value;
+        if(paramid == 0) ka = document.getElementById("am_ka").value/100.0;
         else
         {
             ambiet_light_color[0] = document.getElementById("am_lR").value;
@@ -469,7 +469,7 @@
         <span>Ambient Light</span>
         <table>
             <tr>
-                <td>Ka: <input style="max-width: 70%; vertical-align: middle;" id="am_ka" type="range" autocomplete="off" value="0.1" max="1." min="0." step="0.05" oninput="update_ambient_light(0)"></td>
+                <td>Ka: <input style="max-width: 70%; vertical-align: middle;" id="am_ka" type="range" autocomplete="off" value="0.1" max="100" min="1" step="any" oninput="update_ambient_light(0)"></td>
             </tr>
         </table>
         </br>
