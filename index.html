@@ -347,7 +347,7 @@
             obj_vec[i].scale();
             obj_vec[i].shear();
             
-            console.log(obj_vec[i].translation_vec);
+            //console.log(obj_vec[i].translation_vec);
 
             setMatrixUniforms(obj_vec[i]);
 
@@ -438,7 +438,7 @@
         var tx = document.getElementById(objid + "_transX").value;
         var ty = document.getElementById(objid + "_transY").value;
         var tz = document.getElementById(objid + "_transZ").value;
-        console.log("TRANS: ",tx,ty,tz);
+        console.log("TRANS: %f, %f, %f",tx,ty,tz);
         obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
     }
 
@@ -446,7 +446,7 @@
         var rx = document.getElementById(objid + "_rotateX").value;
         var ry = document.getElementById(objid + "_rotateY").value;
         var rz = document.getElementById(objid + "_rotateZ").value;
-        console.log("ROTATE: ",rx,ry,rz);
+        console.log("ROTATE: %f, %f, %f",rx,ry,rz);
         obj_vec[objid].rotate_vec = vec3.create([rx, ry, rz]);
     }
     
