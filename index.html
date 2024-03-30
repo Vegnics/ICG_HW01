@@ -251,28 +251,29 @@
         gl.uniform1f(gl.getUniformLocation(shaderProgram, "Ka"), ka);
         gl.uniform3fv(gl.getUniformLocation(shaderProgram, "ambient_color"), ambiet_light_color);
         
-        var context = new AudioContext();
-        var audio = document.getElementById('myAudio');
-        var audioSrc = context.createMediaElementSource(audio);
-        var sourceJs = context.createScriptProcessor(2048); 
+        //var context = new AudioContext();
+        //var audio = document.getElementById('myAudio');
+        //var audioSrc = context.createMediaElementSource(audio);
+        //var sourceJs = context.createScriptProcessor(2048); 
 
-        analyser = context.createAnalyser();
-        analyser.smoothingTimeConstant = 0.6;
-        analyser.fftSize = 512;
+        //analyser = context.createAnalyser();
+        //analyser.smoothingTimeConstant = 0.6;
+        //analyser.fftSize = 512;
  
-        audioSrc.connect(analyser);
-        analyser.connect(sourceJs);
-        sourceJs.buffer = audioSrc.buffer;
-        sourceJs.connect(context.destination);
-        audioSrc.connect(context.destination);
+        //audioSrc.connect(analyser);
+        //analyser.connect(sourceJs);
+        //sourceJs.buffer = audioSrc.buffer;
+        //sourceJs.connect(context.destination);
+        //audioSrc.connect(context.destination);
 
-        sourceJs.onaudioprocess = function(e) {
+        /*sourceJs.onaudioprocess = function(e) {
             frequencyData = new Uint8Array(analyser.frequencyBinCount);
             analyser.getByteFrequencyData(frequencyData);
         };
         
         //audio.play();
-        gl.uniform1f( gl.getUniformLocation(shaderProgram, "volume"), 0.);
+        */
+        //gl.uniform1f( gl.getUniformLocation(shaderProgram, "volume"), 0.);
     }
 
     function setMatrixUniforms(obj) {
