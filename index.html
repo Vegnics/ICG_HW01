@@ -342,13 +342,13 @@
 
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, obj_vec[i].pMatrix);
             mat4.identity(obj_vec[i].mvMatrix);
-            obj_vec[i].scale();
+            obj_vec[i].translation();
             obj_vec[i].rotation();
             obj_vec[i].shear();
+            obj_vec[i].scale();
 
             console.log(obj_vec[i].translation_vec);
 
-            obj_vec[i].translation();
             setMatrixUniforms(obj_vec[i]);
 
 
@@ -438,6 +438,7 @@
         var tx = document.getElementById(objid + "_transX").value;
         var ty = document.getElementById(objid + "_transY").value;
         var tz = document.getElementById(objid + "_transZ").value;
+        console.log(tx,ty,tz);
         obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
     }
 
