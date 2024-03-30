@@ -308,15 +308,17 @@
     function loadObj(obj) {
         var request = new XMLHttpRequest();
         var jsonchck = false;
+        var parsedData;
         request.open("GET", "./model/"+obj.name);
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
                 //console.log(request.responseText);
                 try {
-                    const parsedData = JSON.parse(request.responseText);
+                    parsedData = JSON.parse(request.responseText);
                     jsonchck = true;
                 } catch (error) {
                     console.error('Error parsing JSON:', error);
+                    jsonchck = false;
                 }
                 if(jsonchck==true) handleLoaded(obj, parsedData);
             }
