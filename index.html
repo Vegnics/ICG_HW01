@@ -317,7 +317,7 @@
                 } catch (error) {
                     console.error('Error parsing JSON:', error);
                 }
-                if(jsonchck==true) handleLoaded(obj, JSON.parse(request.responseText));
+                if(jsonchck==true) handleLoaded(obj, parsedData);
             }
         }
         request.send();
