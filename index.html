@@ -438,7 +438,7 @@
         var tx = document.getElementById(objid + "_transX").value;
         var ty = document.getElementById(objid + "_transY").value;
         var tz = document.getElementById(objid + "_transZ").value;
-        console.log(tx,ty,tz);
+        console.log("TRANS: ",tx,ty,tz);
         obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
     }
 
@@ -446,6 +446,7 @@
         var rx = document.getElementById(objid + "_rotateX").value;
         var ry = document.getElementById(objid + "_rotateY").value;
         var rz = document.getElementById(objid + "_rotateZ").value;
+        console.log("ROTATE: ",rx,ry,rz);
         obj_vec[objid].rotate_vec = vec3.create([rx, ry, rz]);
     }
     
