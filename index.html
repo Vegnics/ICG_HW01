@@ -309,6 +309,7 @@
         request.open("GET", "./model/"+obj.name);
         request.onreadystatechange = function () {
             if (request.readyState == 4) {
+                console.log(request.responseText);
                 handleLoaded(obj, JSON.parse(request.responseText));
             }
         }
