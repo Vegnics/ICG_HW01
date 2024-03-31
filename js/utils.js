@@ -37,7 +37,7 @@ class CGObject{
 
     orientation(){
         // Use the relative positioning matrix
-        _relmvMat = mat4.create(); 
+        var _relmvMat = mat4.create(); 
         var ox = degToRad(this.orientation_vec[0]);
         var oy = degToRad(this.orientation_vec[1]);
         var oz = degToRad(this.orientation_vec[2]);
