@@ -17,13 +17,14 @@ class CGObject{
         this.shear_vec = shear_vec;
 
         this.mvMatrix = mat4.create();
-        this.orMatrix = mat4.create();
+        this.relmvMatrix = mat4.create();
+        this.invOrient = mat4.create();
         this.pMatrix  = mat4.create();
         this.texture  = "NONE";
         // nothing
     }
 
-    set_translation_vec(trans_vec){  this.translation_vec = trans_vec;  }
+    set_translation_vec(trans_vec){  this.translation_vec = trans_vec;}
 
     set_rotate_vec(rotate_vec){ this.rotate_vec = rotate_vec; }
 
@@ -35,26 +36,24 @@ class CGObject{
 
 
     orientation(){
+        // Use the relative positioning matrix 
         var ox = degToRad(this.orientation_vec[0]);
         var oy = degToRad(this.orientation_vec[1]);
         var oz = degToRad(this.orientation_vec[2]);
-        mat4.rotate(this.mvMatrix,ox,[1,0,0]);
-        mat4.rotate(this.mvMatrix,oy,[0,1,0]);
-        mat4.rotate(this.mvMatrix,oz,[0,0,1]);
-        mat4.multiply(this.orMatrix,this.mvMatrix,mat4.create());
-        //asd
+        mat4.rotate(this.relmvMatrix,ox,[1,0,0]);
+        mat4.rotate(this.relmvMatrix,oy,[0,1,0]);
+        mat4.rotate(this.relmvMatrix,oz,[0,0,1]);
+        mat4.inverse(this.invOrient,this.relmvMatrix);
     }
 
     rotation(){
-        var invOrient = mat4.create();
-        mat4.inverse(invOrient,this.orMatrix);
         var rx = degToRad(this.rotate_vec[0]);
         mat4.rotate(this.mvMatrix, rx, [1, 0, 0]);
         var ry = degToRad(this.rotate_vec[1]);
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
-        mat4.multiply(this.mvMatrix,invOrient,this.mvMatrix);
+        mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
     }
 
     scale(){
@@ -62,7 +61,7 @@ class CGObject{
         for(var i=0;i<3;i++){
             absScaled_vec[i]*=this.scale_vec[i];
         }
-        mat4.scale(this.mvMatrix,absScaled_vec); 
+        mat4.scale(this.relmvMatrix,absScaled_vec); 
     }
 
     shear(){
@@ -70,6 +69,9 @@ class CGObject{
         var coty =  1 / Math.tan(degToRad(this.shear_vec[1]));
         var cotz =  1 / Math.tan(degToRad(this.shear_vec[2]));
         mat4.multiply(this.mvMatrix, mat4.create([1, 0, cotz, 0, cotx, 1, 0, 0, 0, coty, 1, 0, 0, 0, 0, 1]));
+    }
+    merge(){
+        mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
 }
 
