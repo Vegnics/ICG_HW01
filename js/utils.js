@@ -17,6 +17,7 @@ class CGObject{
         this.shear_vec = shear_vec;
 
         this.mvMatrix = mat4.create();
+        this.orMatrix = mat4.create();
         this.pMatrix  = mat4.create();
         this.texture  = "NONE";
     }
@@ -38,16 +39,19 @@ class CGObject{
         mat4.rotate(this.mvMatrix,ox,[1,0,0]);
         mat4.rotate(this.mvMatrix,oy,[0,1,0]);
         mat4.rotate(this.mvMatrix,oz,[0,0,1]);
-        console.log(ox);
+        mat4.multiply(this.orMatrix,this.mvMatrix,mat4.create());
     }
 
     rotation(){
+        var invOrient;
+        mat4.inverse(invOrient,this.orMatrix);
         var rx = degToRad(this.rotate_vec[0]);
         mat4.rotate(this.mvMatrix, rx, [1, 0, 0]);
         var ry = degToRad(this.rotate_vec[1]);
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
+        mat4.multiply(this.mvMatrix,invOrient,this.mvMatrix);
     }
 
     scale(){
