@@ -1,5 +1,5 @@
 class CGObject{
-    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null, abs_scale=1.0) {
+    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null,orient_vec=null, abs_scale=1.0) {
         
         this.id = id;
         this.name = name;
@@ -9,6 +9,7 @@ class CGObject{
         this.VertexFrontColorBuffer;
         this.vertexTextureCoordBuffer;
         
+        this.orientation_vec = orient_vec;
         this.translation_vec = trans_vec;
         this.rotate_vec = rotate_vec;
         this.scale_vec = scale_vec;
@@ -30,13 +31,20 @@ class CGObject{
 
     translation(){ mat4.translate(this.mvMatrix, this.translation_vec); }
 
+    orientation(){
+        var ox = degToRad(this.orientation_vec[0]);
+        var oy = degToRad(this.orientation_vec[1]);
+        var oz = degToRad(this.orientation_vec[2]);
+        mat4.rotate(this.mvMatrix,ox,[1,0,0]);
+        mat4.rotate(this.mvMatrix,oy,[0,1,0]);
+        mat4.rotate(this.mvMatrix,oz,[0,0,1]);
+    }
+
     rotation(){
         var rx = degToRad(this.rotate_vec[0]);
         mat4.rotate(this.mvMatrix, rx, [1, 0, 0]);
-
         var ry = degToRad(this.rotate_vec[1]);
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
-
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
     }
