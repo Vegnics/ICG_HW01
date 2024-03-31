@@ -20,6 +20,7 @@ class CGObject{
         this.orMatrix = mat4.create();
         this.pMatrix  = mat4.create();
         this.texture  = "NONE";
+        // nothing
     }
 
     set_translation_vec(trans_vec){  this.translation_vec = trans_vec;  }
@@ -31,6 +32,7 @@ class CGObject{
     set_shear_vec(shear_vec){  this.shear_vec = shear_vec; }
 
     translation(){ mat4.translate(this.mvMatrix, this.translation_vec); }
+
 
     orientation(){
         var ox = degToRad(this.orientation_vec[0]);
