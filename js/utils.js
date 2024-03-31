@@ -73,7 +73,7 @@ class CGObject{
 
     merge(){
         // Merge transformations
-        // asds
+        // asdsd
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
