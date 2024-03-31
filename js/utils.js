@@ -42,6 +42,7 @@ class CGObject{
         mat4.rotate(this.mvMatrix,oy,[0,1,0]);
         mat4.rotate(this.mvMatrix,oz,[0,0,1]);
         mat4.multiply(this.orMatrix,this.mvMatrix,mat4.create());
+        //asd
     }
 
     rotation(){
