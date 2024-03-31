@@ -542,15 +542,20 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+                <td><button id="0_resetPose" name="Reset pose"></td>
             </tr>
+        </table>
+        <table>
             <tr>
                   <td>Scale X</td>
-                  <td><input id="0_scaleX" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                  <td><input id="0_scaleX" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
                   <td>Scale Y</td>
-                  <td><input id="0_scaleY" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                  <td><input id="0_scaleY" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
                   <td>Scale Z</td>
-                  <td><input id="0_scaleZ" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                  <td><input id="0_scaleZ" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
             </tr>
+        </table>
+        <table>
             <tr>
             <th>Object 2</th>
             </tr>
@@ -562,7 +567,11 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+                <td><button id="1_resetPose" name="Reset pose"></td>
                 </tr>
+            </tr>
+        </table>
+        <table>
             </tr>
                   <td>Scale X</td>
                   <td><input id="1_scaleX" type="range" orient="vertical" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
@@ -571,6 +580,7 @@
                   <td>Scale Z</td>
                   <td><input id="1_scaleZ" type="range" orient="vertical" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
             </tr>
+        </table>
             <th>Object 3</th>
             </tr>
             <tr>
