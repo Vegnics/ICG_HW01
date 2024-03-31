@@ -47,7 +47,7 @@ class CGObject{
 
     rotation(){
         var invOrient = mat4.create();
-        mat4.invert(invOrient,this.orMatrix);
+        mat4.inverse(invOrient,this.orMatrix);
         var rx = degToRad(this.rotate_vec[0]);
         mat4.rotate(this.mvMatrix, rx, [1, 0, 0]);
         var ry = degToRad(this.rotate_vec[1]);
