@@ -38,6 +38,7 @@ class CGObject{
         mat4.rotate(this.mvMatrix,ox,[1,0,0]);
         mat4.rotate(this.mvMatrix,oy,[0,1,0]);
         mat4.rotate(this.mvMatrix,oz,[0,0,1]);
+        console.log(ox);
     }
 
     rotation(){
