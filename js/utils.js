@@ -72,6 +72,7 @@ class CGObject{
     }
 
     merge(){
+        // Merge transformations
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
 }
