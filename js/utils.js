@@ -36,14 +36,16 @@ class CGObject{
 
 
     orientation(){
-        // Use the relative positioning matrix 
+        // Use the relative positioning matrix
+        _relmvMat = mat4.create(); 
         var ox = degToRad(this.orientation_vec[0]);
         var oy = degToRad(this.orientation_vec[1]);
         var oz = degToRad(this.orientation_vec[2]);
-        mat4.rotate(this.relmvMatrix,ox,[1,0,0]);
-        mat4.rotate(this.relmvMatrix,oy,[0,1,0]);
-        mat4.rotate(this.relmvMatrix,oz,[0,0,1]);
-        mat4.inverse(this.invOrient,this.relmvMatrix);
+        mat4.rotate(_relmvMat,ox,[1,0,0]);
+        mat4.rotate(_relmvMat,oy,[0,1,0]);
+        mat4.rotate(_relmvMat,oz,[0,0,1]);
+        mat4.inverse(this.invOrient,_relmvMat);
+        mat4.multiply(this.relmvMatrix,_relmvMat,mat4.create());
     }
 
     rotation(){
