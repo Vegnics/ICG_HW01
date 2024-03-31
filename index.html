@@ -467,11 +467,10 @@
     }
 
     function update_scale(objid){
-        var sx = ((document.getElementById(objid + "_scaleX").value))*4.0/100.0;
-        var sy = ((document.getElementById(objid + "_scaleY").value))*4.0/100.0;
-        var sz = ((document.getElementById(objid + "_scaleZ").value))*4.0/100.0;
+        var sx = ((document.getElementById(objid + "_scaleX").value))*(4.0-0.3)/100.0+0.3;
+        var sy = ((document.getElementById(objid + "_scaleY").value))*(4.0-0.3)/100.0+0.3;
+        var sz = ((document.getElementById(objid + "_scaleZ").value))*(4.0-0.3)/100.0+0.3;
         obj_vec[objid].scale_vec = vec3.create([sx, sy, sz]);
-        console.log([sx, sy, sz]);
     }
     
 </script>
@@ -543,6 +542,8 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+            </tr>
+            <tr>
                   <td>Scale X</td>
                   <td><input id="0_scaleX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
                   <td>Scale Y</td>
@@ -561,6 +562,8 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+                </tr>
+            </tr>
                   <td>Scale X</td>
                   <td><input id="1_scaleX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
                   <td>Scale Y</td>
