@@ -43,7 +43,10 @@ class CGObject{
 
     scale(){
         var absScaled_vec = [this.absScale,this.absScale,this.absScale]; 
-        for(var i=0;i<3;i++){absScaled_vec[i]*=this.scale_vec[i]}
+        for(var i=0;i<3;i++){
+            absScaled_vec[i]*=this.scale_vec[i]
+        }
+        console.log("%f,  %f,  %f",absScaled_vec[0],absScaled_vec[1],absScaled_vec[2])
         mat4.scale(this.mvMatrix,absScaled_vec); 
     }
 
