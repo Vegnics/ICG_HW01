@@ -145,6 +145,7 @@
     var pMatrix  = mat4.create();
     // object parameters
     var obj_names = ["Teapot.json","Kangaroo.json"];
+    var abs_scales = [0.3,5.8];
     var obj_vec = [];
     var obj_default_trans = [vec3.create([-10.0, -1.0, -30.]), vec3.create([0.0, 0., -30.]),  vec3.create([-15., -1., -37.])];
     var obj_default_rotate = [vec3.create([0., 0., -0.]), vec3.create([-90.,0.0,0.0]), vec3.create([-90., 0., -50.])];
@@ -409,7 +410,7 @@
         for(var i=0 ; i<2 ; i+=1){
             console.log(obj_default_trans[i]);
             console.log(obj_default_rotate[i]);
-            obj_vec.push( new CGObject(i, obj_names[i], obj_default_trans[i], obj_default_rotate[i], obj_default_scale[i], obj_default_shear) );
+            obj_vec.push( new CGObject(i, obj_names[i], obj_default_trans[i], obj_default_rotate[i], obj_default_scale[i], obj_default_shear,abs_scales[i]));
             loadObj(obj_vec[i]);
         }
 
@@ -463,6 +464,13 @@
         var rz = ((document.getElementById(objid + "_rotateZ").value))*(360.0/100.0)-180.0;
         console.log("ROTATE: %f, %f, %f",rx,ry,rz);
         obj_vec[objid].rotate_vec = vec3.create([rx, ry, rz]);
+    }
+
+    function update_scale(objid){
+        var sx = ((document.getElementById(objid + "_scaleX").value))*4.0/100.0;
+        var sy = ((document.getElementById(objid + "_scaleY").value))*4.0/100.0;
+        var sz = ((document.getElementById(objid + "_scaleZ").value))*4.0/100.0;
+        obj_vec[objid].scale_vec = vec3.create([sx, sy, sz]);
     }
     
 </script>
@@ -524,7 +532,6 @@
         <span>Animation</span>
         <table>
             <tr>
-            <th></th>
             <th>Object 1</th>
             </tr>
             <tr>
@@ -535,7 +542,14 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+                  <td>Scale X</td>
+                  <td><input id="0_scaleX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                  <td>Scale Y</td>
+                  <td><input id="0_scaleY" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                  <td>Scale Z</td>
+                  <td><input id="0_scaleZ" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
             </tr>
+            <tr>
             <th>Object 2</th>
             </tr>
             <tr>
@@ -546,6 +560,12 @@
                     <option value="1"selected>Y</option>
                     <option value="2">Z</option>
                   </select></td>
+                  <td>Scale X</td>
+                  <td><input id="1_scaleX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
+                  <td>Scale Y</td>
+                  <td><input id="1_scaleY" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
+                  <td>Scale Z</td>
+                  <td><input id="1_scaleZ" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
             </tr>
             <th>Object 3</th>
             </tr>

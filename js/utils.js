@@ -1,5 +1,5 @@
 class CGObject{
-    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null) {
+    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null, abs_scale=1.0) {
         
         this.id = id;
         this.name = name;
@@ -12,6 +12,7 @@ class CGObject{
         this.translation_vec = trans_vec;
         this.rotate_vec = rotate_vec;
         this.scale_vec = scale_vec;
+        this.absScale = abs_scale;
         this.shear_vec = shear_vec;
 
         this.mvMatrix = mat4.create();
@@ -23,7 +24,7 @@ class CGObject{
 
     set_rotate_vec(rotate_vec){ this.rotate_vec = rotate_vec; }
 
-    set_scale_vec(scale_vec){ this.scale_vec = scale_vec; }
+    set_scale_vec(scale_vec){ this.scale_vec = scale_vec;}
 
     set_shear_vec(shear_vec){  this.shear_vec = shear_vec; }
 
@@ -40,7 +41,11 @@ class CGObject{
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
     }
 
-    scale(){ mat4.scale(this.mvMatrix, this.scale_vec); }
+    scale(){
+        var absScaled_vec = [this.abs_scale,this.absScale,this.absScale]; 
+        for(var i=0;i<3;i++){absScaled_vec[i]*=this.scale_vec[i]}
+        mat4.scale(this.mvMatrix,absScaled_vec); 
+    }
 
     shear(){
         var cotx =  1 / Math.tan(degToRad(this.shear_vec[0]));
