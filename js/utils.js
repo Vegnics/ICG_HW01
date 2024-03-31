@@ -76,7 +76,7 @@ class CGObject{
     merge(){
         // Merge transformati  ons
         // asdsd
-        mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
+        //mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
 }
