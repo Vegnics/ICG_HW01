@@ -372,11 +372,14 @@
     }
 
     function animate() {
+        var raxis;
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
             var elapsed = timeNow - lastTime;
             for(var i=0; i<2; i++){
-                obj_vec[i].rotate_vec[1]+= 0.03 * elapsed;
+                raxis = document.getElementById(i+"_rotAxis").value
+                console.log(raxis);
+                obj_vec[i].rotate_vec[parseInt(raxis)]+= 0.03 * elapsed;
             }
         }
         lastTime = timeNow;
@@ -508,25 +511,35 @@
             </tr>
             <tr>
                 <td>Trans.</td>
-                <!--
-                <td><input id="0_transX" type="range" autocomplete="off" value="0." min="-50." max="50." step="any" oninput="update_trans(0)"></td>
-                <td><input id="0_transY" type="range" autocomplete="off" value="0." min="-50." max="50." step="any"  oninput="update_trans(0)"></td>
-                <td><input id="0_transZ" type="range" autocomplete="off" value="-15." min="-120." max="0." step="any"  oninput="update_trans(0)"></td>
-                -->
                 <td><input id="0_transX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
                 <td><input id="0_transY" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
                 <td><input id="0_transZ" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
             </tr>
             <tr>
                 <td>Rotate</td>
-                <!--
-                <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="-180." max="180." step="any"  oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="-180." max="180." step="any" oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="-180." max="180." step="any" oninput="update_rotate(0)"></td>
-                -->
                 <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any"  oninput="update_rotate(0)"></td>
                 <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
                 <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
+            </tr>
+        </table>
+        <span>Animation</span>
+        <table>
+            <tr>
+            <th></th>
+            <th>Object 1</th>
+            <th>Object 2</th>
+            <th>Object 3</th>
+            </tr>
+            <tr>
+                <td>Object rotation axis</td>
+                <td><select id="0_rotAxis">
+                    <option value="">--Choose the rotation axis</option>
+                    <option value="0">X</option>
+                    <option value="1"selected>Y</option>
+                    <option value="2">Z</option>
+                  </select></td>
+                <td><input id="1_rotAxis" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
+                <td><input id="2_rotAxis" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
             </tr>
         </table>
     </p>
