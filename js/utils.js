@@ -47,7 +47,7 @@ class CGObject{
         mat4.rotate(_relmvMat,oz,[0,0,1]);
         mat4.inverse(this.invOrient,_relmvMat);
         mat4.multiply(this.relmvMatrix,_relmvMat,_iden);
-        console.log(this.relmvMatrix);
+        console.log("HOLA");
     }
 
     rotation(){
