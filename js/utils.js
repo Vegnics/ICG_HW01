@@ -47,6 +47,7 @@ class CGObject{
         mat4.rotate(_relmvMat,oz,[0,0,1]);
         mat4.inverse(this.invOrient,_relmvMat);
         mat4.multiply(this.relmvMatrix,_relmvMat,_iden);
+        console.log(this.relmvMatrix);
     }
 
     rotation(){
@@ -56,7 +57,6 @@ class CGObject{
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
-        //mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
     }
 
     scale(){

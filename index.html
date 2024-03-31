@@ -345,6 +345,7 @@
 
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, obj_vec[i].pMatrix);
             mat4.identity(obj_vec[i].mvMatrix);
+            obj_vec[i].orientation();
             obj_vec[i].translation();
             obj_vec[i].rotation();
             obj_vec[i].scale();
