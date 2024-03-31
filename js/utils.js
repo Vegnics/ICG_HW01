@@ -53,7 +53,7 @@ class CGObject{
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
-        mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
+        //mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
     }
 
     scale(){
@@ -73,6 +73,8 @@ class CGObject{
 
     merge(){
         // Merge transformations
+        // asds
+        mat4.multiply(this.mvMatrix,this.mvMatrix,this.invOrient);
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
 }
