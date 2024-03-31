@@ -21,7 +21,7 @@ class CGObject{
         this.invOrient = mat4.create();
         this.pMatrix  = mat4.create();
         this.texture  = "NONE";
-        // nothing
+        // nothingetrreg
     }
 
     set_translation_vec(trans_vec){  this.translation_vec = trans_vec;}
@@ -70,7 +70,7 @@ class CGObject{
         var cotz =  1 / Math.tan(degToRad(this.shear_vec[2]));
         mat4.multiply(this.mvMatrix, mat4.create([1, 0, cotz, 0, cotx, 1, 0, 0, 0, coty, 1, 0, 0, 0, 0, 1]));
     }
-    
+
     merge(){
         mat4.multiply(this.mvMatrix,this.mvMatrix,this.relmvMatrix);
     }
