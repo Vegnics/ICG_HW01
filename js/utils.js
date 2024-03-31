@@ -46,15 +46,15 @@ class CGObject{
     }
 
     rotation(){
-        var invOrient = mat4.create();
-        mat4.inverse(invOrient,this.orMatrix);
+        //var invOrient = mat4.create();
+        //mat4.inverse(invOrient,this.orMatrix);
         var rx = degToRad(this.rotate_vec[0]);
         mat4.rotate(this.mvMatrix, rx, [1, 0, 0]);
         var ry = degToRad(this.rotate_vec[1]);
         mat4.rotate(this.mvMatrix, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
         mat4.rotate(this.mvMatrix, rz, [0, 0, 1]);
-        mat4.multiply(this.mvMatrix,invOrient,this.mvMatrix);
+        //mat4.multiply(this.mvMatrix,invOrient,this.mvMatrix);
     }
 
     scale(){
