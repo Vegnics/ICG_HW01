@@ -10,7 +10,7 @@
 <script type="text/javascript" src="./js/webgl-utils.js"></script>
 <script type="text/javascript" src="./js/utils.js"></script>
 <link rel="stylesheet" type="text/css" href="./js/css_style.css">
-<!-- asd
+<!-- 
     TODO HERE: 
     modify fragment shader or write another one
     to implement flat, gouraud and phong shading
@@ -148,7 +148,7 @@
     var abs_scales = [0.3,5.8];
     var obj_vec = [];
     var obj_default_trans = [vec3.create([-10.0, -1.0, -30.]), vec3.create([0.0, 0., -30.]),  vec3.create([-15., -1., -37.])];
-    var obj_orientation = [vec3.create([90.0,0.0, 0.0]), vec3.create([0.0,0.0,0.0]), vec3.create([-90., 0., -50.])];
+    var obj_orientation = [vec3.create([-90.0,0.0, 0.0]), vec3.create([0.0,0.0,0.0]), vec3.create([-90., 0., -50.])];
     var obj_default_rotate = [vec3.create([0., 0., -0.1]), vec3.create([0.,0.,0.1]), vec3.create([-90., 0., -50.])];
     var obj_default_scale = [vec3.create([1.0, 1.0, 1.0]), vec3.create([1.0, 1.0, 1.0]), vec3.create([5., 5., 5.])];
     var obj_default_shear = vec3.create([90., 90., 90.]);
@@ -352,10 +352,13 @@
             //mat4.identity(obj_vec[i].invOrient);
             //obj_vec[i].orientation();
             //obj_vec[i].translation();
-            //obj_vec[i].orient();
+            obj_vec[i].orient();
             obj_vec[i].rotation();
-            obj_vec[i].animationTransform();
-            obj_vec[i].updateAuxiliarOrientation();
+            obj_vec[i].scalerm();
+            //obj_vec[i].scale();
+            //obj_vec[i].shear();
+            //
+            obj_vec[i].merge();
 
             setMatrixUniforms(obj_vec[i]);
 
@@ -387,18 +390,18 @@
             var elapsed = timeNow - lastTime;
             for(var i=0; i<2; i++){
                 raxis = document.getElementById(i+"_rotAxis").value;
-                if(obj_vec[i].raxis!=parseInt(raxis)){
-                    console.log("Axis change to %d",parseInt(raxis));
+                /*if(obj_vec[i].raxis!=parseInt(raxis)){
+                    console.log("Axis change");
                     obj_vec[i].raxis = parseInt(raxis);
-                    mat4.clone(obj_vec[i].arelOrientMat,obj_vec[i].relOrientMat);
+                    mat4.multiply(obj_vec[i].relOrientMat,obj_vec[i].relRotateMat,obj_vec[i].relOrientMat);
                     obj_vec[i].rotate_vec[0]=0.0;
                     obj_vec[i].rotate_vec[1]=0.0;
                     obj_vec[i].rotate_vec[2]=0.0;
-
-                }
-                else{
-                    obj_vec[i].rotate_vec[parseInt(raxis)]+= 0.0; //* elapsed;
-                }
+                }*/
+                obj_vec[i].rotate_vec[0]= 0.0;
+                obj_vec[i].rotate_vec[1]= 0.0;
+                obj_vec[i].rotate_vec[2]= 0.0;
+                obj_vec[i].rotate_vec[parseInt(raxis)]= 5.0; //* elapsed;
             }
         }
         lastTime = timeNow;
@@ -433,7 +436,7 @@
         for(var i=0 ; i<2 ; i+=1){
             //console.log(obj_default_trans[i]);
             //console.log(obj_default_rotate[i]);
-            obj_vec.push( new CGObject(i, obj_names[i], obj_default_trans[i], obj_default_rotate[i], vec3.create([1.0,1.0,1.0]), obj_default_shear,obj_orientation[i],abs_scales[i]));
+            obj_vec.push( new CGObject(i, obj_names[i], obj_default_trans[i], obj_default_rotate[i], vec3.create([0.,0.,0.]), obj_default_shear,obj_orientation[i],abs_scales[i]));
             loadObj(obj_vec[i]);
             obj_vec[i].orientation();
             console.log(printArray(obj_vec[i].relmvMatrix,16));
@@ -563,8 +566,8 @@
                 <td><select id="0_rotAxis">
                     <option value="">--Choose the rotation axis</option>
                     <option value="0">X</option>
-                    <option value="1">Y</option>
-                    <option value="2"selected>Z</option>
+                    <option value="1"selected>Y</option>
+                    <option value="2">Z</option>
                   </select></td>
                 <td><button id="0_resetPose" name="Reset pose"></td>
             </tr>
@@ -612,8 +615,8 @@
                 <td><select id="2_rotAxis">
                     <option value="">--Choose the rotation axis</option>
                     <option value="0">X</option>
-                    <option value="1">Y</option>
-                    <option value="2"selected>Z</option>
+                    <option value="1"selected>Y</option>
+                    <option value="2">Z</option>
                   </select></td>
             </tr>
         </table>

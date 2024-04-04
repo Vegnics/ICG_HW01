@@ -9,26 +9,25 @@ class CGObject{
         this.VertexFrontColorBuffer;
         this.vertexTextureCoordBuffer;
         
-        this.orientation_vec = orient_vec; // orientation vector
-        this.translation_vec = trans_vec; // translation vector
-        this.rotate_vec = rotate_vec; // rotation vector
-        this.scale_vec = scale_vec; // scale vector
-        this.absScale = abs_scale; // Absolute scale val
-        this.shear_vec = shear_vec; // 
+        this.orientation_vec = orient_vec;
+        this.translation_vec = trans_vec;
+        this.rotate_vec = rotate_vec;
+        this.scale_vec = scale_vec;
+        this.absScale = abs_scale;
+        this.shear_vec = shear_vec;
 
         this.mvMatrix = mat4.create();
 
-        this.orientMat = mat4.create(); // orientation matrix
-        this.relOrientMat = mat4.create(); //relative orientation
-        this.arelOrientMat = mat4.create(); // auxiliar relative orientation
-        this.anRotateMat = mat4.create(); // Rotation due to the animation
+        this.relOrientMat = mat4.create();
+        this.relRotateMat = mat4.create();
+        mat4.identity(this.relRotateMat);
         this.relScaleMat = mat4.create();
         
         this.relmvMatrix = mat4.create();
         //this.absRotMatrix = mat4.create();
         //mat4.identity(this.absRotMatrix);
-        this.raxis = 2;
-        
+        this.raxis = 0;
+        this.orientMat = mat4.create();
         this.pMatrix  = mat4.create();
         this.texture  = "NONE";
         // nothingetrreg
@@ -49,6 +48,13 @@ class CGObject{
 
 
     orientation(){
+        // Use the relative positioning matrixdd
+        //console.log("Object %d",this.id);
+        //var car = mat4.create([1.,0.,0.,0.,0.,2.,0.,0.,0.,0.,3.,0.,0.,0.,0.,4.]);
+        //var car2 = mat4.create([1.,0.,0.,0.,1.,1.,0.,0.,1.,1.,1.,0.,1.,1.,1.,1.]);
+        //var car3 = mat4.create();
+        //mat4.multiply(car,car2,car3);
+        //console.log(mat4.str(car3));
         var _relmvMat = mat4.create(); 
         mat4.identity(_relmvMat);
         var ox = degToRad(this.orientation_vec[0]);
@@ -58,18 +64,17 @@ class CGObject{
         mat4.rotate(_relmvMat,oy,[0,1,0]);
         mat4.rotate(_relmvMat,oz,[0,0,1]);
         mat4.clone(_relmvMat,this.orientMat);
-        mat4.identity(this.relOrientMat);
     }
 
     rotation(){
         //Relative rotation for animation
-        mat4.identity(this.anRotateMat);
+        mat4.identity(this.relRotateMat);
         var rx = degToRad(this.rotate_vec[0]);
-        mat4.rotate(this.anRotateMat, rx, [1, 0, 0]);
+        mat4.rotate(this.relRotateMat, rx, [1, 0, 0]);
         var ry = degToRad(this.rotate_vec[1]);
-        mat4.rotate(this.anRotateMat, ry, [0, 1, 0]);
+        mat4.rotate(this.relRotateMat, ry, [0, 1, 0]);
         var rz = degToRad(this.rotate_vec[2]);
-        mat4.rotate(this.anRotateMat, rz, [0, 0, 1]);
+        mat4.rotate(this.relRotateMat, rz, [0, 0, 1]);
     }
 
     orient(){
@@ -117,7 +122,7 @@ class CGObject{
     }
 
     merge(){
-        // Merge transformationsasd
+        // Merge transformations
         var invOrient = mat4.inverse(this.orientMat);
         var trans_mat = mat4.create();
         mat4.identity(trans_mat);
@@ -127,44 +132,6 @@ class CGObject{
         mat4.multiply(this.mvMatrix,this.relRotateMat,this.mvMatrix); 
         mat4.multiply(this.mvMatrix,invOrient,this.mvMatrix);
         mat4.multiply(trans_mat,this.mvMatrix,this.mvMatrix);
-    }
-
-    animationTransform(){
-        var _mvMat = mat4.create();
-        var invOrient = mat4.create();
-        var trans_mat = mat4.create();
-
-        mat4.inverse(this.orientMat,invOrient);
-        mat4.identity(_mvMat);
-        mat4.identity(trans_mat);
-        mat4.translate(trans_mat,this.translation_vec);
-
-        //Fixed Orientation
-        mat4.multiply(_mvMat,this.orientMat,_mvMat);
-
-        //Scaling
-        var absScaled_vec = [this.absScale,this.absScale,this.absScale]; 
-        for(var i=0;i<3;i++){
-            absScaled_vec[i]*=this.scale_vec[i];
-        }
-        mat4.scaleR(_mvMat,absScaled_vec);
-
-        //Rotation due to animation
-        mat4.multiply(this.anRotateMat,_mvMat,_mvMat);
-
-        //Apply relative orientation
-        //mat4.multiply(_mvMat,this.relOrientMat,_mvMat);
-
-        //Revert fixed orientation
-        mat4.multiply(invOrient,_mvMat,_mvMat);
-
-        //Apply translation
-        mat4.multiply(trans_mat,_mvMat,_mvMat);
-        mat4.clone(_mvMat,this.mvMatrix);
-    }
-
-    updateAuxiliarOrientation(){
-        mat4.multiply(this.anRotateMat,this.relOrientMat,this.arelOrientMat);
     }
 }
 
