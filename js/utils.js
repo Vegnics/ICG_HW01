@@ -1,5 +1,5 @@
 class CGObject{
-    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null,orient_vec=null, abs_scale=1.0) {
+    constructor(id=0, name="", trans_vec=null, rotate_vec=null, scale_vec=null, shear_vec=null,orient_vec=null,rel_orient_vec=null, abs_scale=1.0){
         
         this.id = id;
         this.name = name;
@@ -7,9 +7,19 @@ class CGObject{
         this.VertexPositionBuffer;
         this.VertexNormalBuffer;
         this.VertexFrontColorBuffer;
-        this.vertexTextureCoordBuffer;
+        this.VertexTriNormalBuffer;
+
+        this.VertexTextureCoordBuffer;
+
+        this.shading_mode = 1; // shading mode
+        this.reflect_mode = 1; // ref mode
+        this.hasTexture = false;
+
+        // WebGL texture objects
+        this.textureGL;
         
         this.orientation_vec = orient_vec; // orientation vector
+        this.rel_orientation_vec = rel_orient_vec; //relative orientation vector
         this.translation_vec = trans_vec; // translation vector
         this.rotate_vec = rotate_vec; // rotation vector
         this.scale_vec = scale_vec; // scale vector
@@ -49,16 +59,24 @@ class CGObject{
 
 
     orientation(){
-        var _relmvMat = mat4.create(); 
-        mat4.identity(_relmvMat);
+        var _rMat = mat4.create(); 
+        mat4.identity(_rMat);
         var ox = degToRad(this.orientation_vec[0]);
         var oy = degToRad(this.orientation_vec[1]);
         var oz = degToRad(this.orientation_vec[2]);
-        mat4.rotate(_relmvMat,ox,[1,0,0]);
-        mat4.rotate(_relmvMat,oy,[0,1,0]);
-        mat4.rotate(_relmvMat,oz,[0,0,1]);
-        mat4.clone(_relmvMat,this.orientMat);
-        mat4.identity(this.relOrientMat);
+        mat4.rotate(_rMat,ox,[1,0,0]);
+        mat4.rotate(_rMat,oy,[0,1,0]);
+        mat4.rotate(_rMat,oz,[0,0,1]);
+        mat4.clone(_rMat,this.orientMat);
+
+        mat4.identity(_rMat);
+        ox = degToRad(this.rel_orientation_vec[0]);
+        oy = degToRad(this.rel_orientation_vec[1]);
+        oz = degToRad(this.rel_orientation_vec[2]);
+        mat4.rotate(_rMat,ox,[1,0,0]);
+        mat4.rotate(_rMat,oy,[0,1,0]);
+        mat4.rotate(_rMat,oz,[0,0,1]);
+        mat4.clone(_rMat,this.relOrientMat);
     }
 
     rotation(){
@@ -147,16 +165,23 @@ class CGObject{
         for(var i=0;i<3;i++){
             absScaled_vec[i]*=this.scale_vec[i];
         }
-        mat4.scaleR(_mvMat,absScaled_vec);
+        mat4.scaleRot(_mvMat,absScaled_vec);
+        
+        // Shearing
+        var cotx =  1 / Math.tan(degToRad(this.shear_vec[0]));
+        var coty =  1 / Math.tan(degToRad(this.shear_vec[1]));
+        var cotz =  1 / Math.tan(degToRad(this.shear_vec[2]));
+        mat4.multiply(_mvMat, mat4.create([1, 0, cotz, 0, cotx, 1, 0, 0, 0, coty, 1, 0, 0, 0, 0, 1]));
 
         //Rotation due to animation
         mat4.multiply(this.anRotateMat,_mvMat,_mvMat);
 
         //Apply relative orientation
-        //mat4.multiply(_mvMat,this.relOrientMat,_mvMat);
+        mat4.multiply(this.relOrientMat,_mvMat,_mvMat);
 
         //Revert fixed orientation
         mat4.multiply(invOrient,_mvMat,_mvMat);
+
 
         //Apply translation
         mat4.multiply(trans_mat,_mvMat,_mvMat);
@@ -164,7 +189,7 @@ class CGObject{
     }
 
     updateAuxiliarOrientation(){
-        mat4.multiply(this.anRotateMat,this.relOrientMat,this.arelOrientMat);
+        mat4.multiply(this.relOrientMat,this.anRotateMat,this.arelOrientMat);
     }
 }
 
@@ -173,7 +198,6 @@ class LightObject{
         this.position = position;
         this.color = color;
     }
-
     set_position(position){
         this.position = position;
     }

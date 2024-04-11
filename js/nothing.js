@@ -48,3 +48,44 @@ mat4.multiply=function(a,b,c){
     c[13]=q*e+F*i+G*o+b*r;
     c[14]=q*g+F*j+G*m+b*s;
     c[15]=q*f+F*k+G*n+b*a;return c}
+
+
+vec3.cross=function(a,b,c){
+    c||(c=a);
+    var d=a[0],e=a[1];
+    a=a[2];
+    var g=b[0],f=b[1];
+    b=b[2];
+    c[0]=e*b-a*f;
+    c[1]=a*g-d*b;
+    c[2]=d*f-e*g;
+    return c};
+
+
+mat4.perspective=function(a,b,c,d,e){
+    // a: vfov, b: aspect, c: near, d: far
+    a=c*Math.tan(a*Math.PI/360);
+    b=a*b;
+    return mat4.frustum(-b,b,-a,a,c,d,e)
+};
+
+frustum(out, left, right, bottom, top, near, far)
+
+mat4.frustum=function(a,b,c,d,e,g,f){
+    f||(f=mat4.create());
+    var h=b-a,i=d-c,j=g-e;
+
+    f[0]=e*2/h;f[1]=0;f[2]=0;f[3]=0;
+    f[4]=0;f[5]=e*2/i;f[6]=0;f[7]=0;
+    f[8]=(b+a)/h;f[9]=(d+c)/i;f[10]=-(g+e)/j;f[11]=-1;
+    f[12]=0;f[13]=0;f[14]=-(g*e*2)/j;f[15]=0;
+    return f};
+
+mat4.ortho=function(a,b,c,d,e,g,f){
+    f||(f=mat4.create());
+    var h=b-a,i=d-c,j=g-e;
+    f[0]=2/h;f[1]=0;f[2]=0;f[3]=0;
+    f[4]=0;f[5]=2/i;f[6]=0;f[7]=0;
+    f[8]=0;f[9]=0;f[10]=-2/j;f[11]=0;
+    f[12]=-(a+b)/h;f[13]=-(d+c)/i;f[14]=-(g+e)/j;f[15]=1;
+    return f};

@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <meta http-equiv='cache-control' content='no-cache'> 
 <meta http-equiv='expires' content='0'> 
 <meta http-equiv='pragma' content='no-cache'>
@@ -10,123 +11,200 @@
 <script type="text/javascript" src="./js/webgl-utils.js"></script>
 <script type="text/javascript" src="./js/utils.js"></script>
 <link rel="stylesheet" type="text/css" href="./js/css_style.css">
-<!-- asd
-    TODO HERE: 
-    modify fragment shader or write another one
-    to implement flat, gouraud and phong shading
- -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+
 <script id="fragmentShader" type="fragment">
     #extension GL_OES_standard_derivatives : enable 
 
     precision mediump float;
 
-    varying vec3 shading_mode;
+    varying float shading_mode;
+    varying float reflect_mode;
     varying vec3 vertexColor;
     varying vec3 fragPosition;
     varying vec3 fragNormal;
     varying vec3 lightLocations[3];
     varying vec3 lightColors[3];
-    varying vec3 lightKdKsCDs[3];
+    //varying vec3 lightKdKsCDs[3];
     varying float Ka_val;
     varying vec3 ambient_lightColor;
+    varying vec3 vobjKdKsSh;
+    varying vec3 V;
+    varying vec3 N;
+    varying vec2 fragTexCoord;
 
-    varying vec4 fragcolor;   // for gouraud shading
+    varying vec4 fragcolor;   // for Flat, and Gouraud shading
+
+    uniform sampler2D texMap; // sampler for texture mapping 
 
     void main(void) {
-        if(shading_mode[0] == 1.){                      // gouraud shading;
-            gl_FragColor = fragcolor;
+        if(shading_mode == 1.0 || shading_mode == 2.0){;
+            // flat shading: 1 , gouraud shading: 2
+            gl_FragColor = fragcolor * texture2D(texMap, fragTexCoord);
+        }
+        else{
+            //_pscolor3[0] += _pscolor[0];
+            //_pscolor3[1] += _pscolor[1];
+            //_pscolor3[2] += _pscolor[2];
+
+            vec3 ambient = Ka_val * ambient_lightColor;
+            vec3 phong = vec3(0.0, 0.0, 0.0);
+            float kd = vobjKdKsSh[0], ks = vobjKdKsSh[1], CosineDegree = vobjKdKsSh[2];
+
+            for(int i=0 ; i<3 ; ++i){
+                // Shading from the three light sources
+                //float kd = lightKdKsCDs[i][0], ks = lightKdKsCDs[i][1], CosineDegree = lightKdKsCDs[i][2];
+
+                vec3 L = normalize(lightLocations[i] - fragPosition);
+
+                vec3 Id = lightColors[i] * max(dot(L, N), 0.);
+                vec3 diffuse = kd * Id;
+                vec3 Is = vec3(0.0);
+                
+                if (reflect_mode == 1.0) {
+                    // Blinn-Phong reflection model
+                    vec3 H = normalize(L+V);
+                    Is = lightColors[i] * pow(max(dot(H, N), 0.), CosineDegree);
+                }
+                else if (reflect_mode == 2.0){
+                    // Phong reflection model
+                    vec3 R = -1.*normalize(reflect(L,N));
+                    Is = lightColors[i] * pow(max(dot(R,V), 0.), CosineDegree);
+                }
+                vec3 specular = ks * Is;
+    
+                if(dot(L, N) < 0.){
+                    specular = vec3(0., 0., 0.);
+                }
+                phong += vertexColor * (ambient + diffuse + specular) ;
+            }
+            gl_FragColor = vec4(phong, 1.0)* texture2D(texMap, fragTexCoord);;
         }
     }
 </script>
 
-<!-- 
-    TODO HERE:
-    modify vertex shader or write another one
-    to implement flat, gouraud and phong shading
 
-    NOTE:
-    if you want to write bonus part (texture mapping),
-    only Teapot.json has extra attribute "vertexTextureCoords"
-    which is used for texture mappping.
- -->
 <script id="vertexShader" type="vertex">
     attribute vec3 aVertexPosition;
     attribute vec3 aFrontColor;
     attribute vec3 aVertexNormal;
-
+    attribute vec3 aVertexTriNormal;
+    attribute vec2 aVTexCoord;
+  
     uniform vec3 lightLoc[3];
     uniform vec3 lightColor[3];
-    uniform vec3 lightKdKsCD[3];
+
+    //uniform vec3 lightKdKsCD[3];
+    uniform vec3 KdKsCD[3];
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
     uniform float Ka;
     uniform vec3 ambient_color;
     
-    uniform int mode;
+    uniform int _shading_mode;
+    uniform int _reflect_mode;
     uniform float volume;
+    uniform vec3 objKdKsSh;
 
+    varying float shading_mode;
+    varying float reflect_mode;
     varying vec3 vertexColor;
     varying vec3 fragPosition;
     varying vec3 fragNormal;
-    varying vec3 shading_mode;
     varying vec3 lightLocations[3];
     varying vec3 lightColors[3];
-    varying vec3 lightKdKsCDs[3];
+    //varying vec3 lightKdKsCDs[3];
+    varying vec3 vobjKdKsSh;
     varying float Ka_val;
     varying vec3 ambient_lightColor;
+    varying vec3 V;
+    varying vec3 N;
+    varying vec2 fragTexCoord;
 
     varying vec4 fragcolor;
 
     void main(void) {
+        float nsign = 1.0;
+        mat3 signMat = mat3(nsign);
         Ka_val = Ka;
+        vertexColor = aFrontColor;
+        fragTexCoord = aVTexCoord; // pass the texture coord to frag. shader
+
         ambient_lightColor = ambient_color;
         for(int i=0; i<3 ; ++i){
             lightLocations[i] = lightLoc[i];
             lightColors[i] = lightColor[i];
-            lightKdKsCDs[i] = lightKdKsCD[i];
+            //lightKdKsCDs[i] = lightKdKsCD[i];
         }
         
-        shading_mode = vec3(mode);
+        vobjKdKsSh = objKdKsSh;
+
+        shading_mode = float(_shading_mode);//vec3(mode);
+        reflect_mode = float(_reflect_mode);
 
         vec3 vertex_copy = aVertexPosition;
         vertex_copy.x *= 1.+volume;
         vertex_copy.y *= 1.+volume;
         vertex_copy.z *= 1.+volume;
 
-        if(mode == 1){    
-            vec3 phong = vec3(0., 0., 0.);
+        if(shading_mode == 1.0 || shading_mode== 2.0 || shading_mode==3.0){    
+            vec3 phong = vec3(0.0, 0.0, 0.0);
+            vec3 mvNormal = vec3(0.0,0.0,0.0);
 
             vec3 mvVertex = (uMVMatrix * vec4(vertex_copy, 1.0)).xyz;
+            fragPosition = mvVertex;
 
-            vec3 mvNormal = mat3(uMVMatrix) * aVertexNormal;
+            if (shading_mode == 2.0 || shading_mode == 3.0){
+                // Gouraud, Phong Shading
+                mvNormal = mat3(uMVMatrix) * aVertexNormal;
+            }
+            else if(shading_mode == 1.0){
+                // Flat Shading
+                if(dot(aVertexNormal,aVertexTriNormal)<0.0){nsign = -1.0;}
+                else {nsign = 1.0;}
+                signMat = mat3(nsign);
+                mvNormal = mat3(uMVMatrix) * signMat * aVertexTriNormal;
+            }
 
             float ka = Ka; 
-            vec3 V = -normalize(mvVertex);
-            vec3 N = normalize(mvNormal);
+            V = -normalize(mvVertex);
+            N = normalize(mvNormal);
             vec3 ambient = ka * ambient_color;
 
+            float kd = vobjKdKsSh[0], ks = vobjKdKsSh[1], CosineDegree = vobjKdKsSh[2];
+
             for(int i=0 ; i<3 ; ++i){
-                float kd = lightKdKsCD[i][0], ks = lightKdKsCD[i][1], CosineDegree = lightKdKsCD[i][2];
+                // Shading from the three light sources
 
                 vec3 L = normalize(lightLoc[i] - mvVertex);
-                vec3 H = normalize(L+V);
-
+                
                 vec3 Id = lightColor[i] * max(dot(L, N), 0.);
                 vec3 diffuse = kd * Id;
-    
-                vec3 Is = lightColor[i] * pow(max(dot(H, N), 0.), CosineDegree);
+                vec3 Is = vec3(0.0);
+                if (reflect_mode == 1.0){
+                    // Blinn-Phong reflection model
+                    vec3 H = normalize(L+V);
+                    Is = lightColor[i] * pow(max(dot(H, N), 0.), CosineDegree);
+                }
+                else if (reflect_mode == 2.0){
+                    // Phong reflection model
+                    vec3 R = -1.*normalize(reflect(L,N));
+                    Is = lightColor[i] * pow(max(dot(R,V), 0.), CosineDegree);
+                }
+
                 vec3 specular = ks * Is;
     
                 if(dot(L, N) < 0.){
                     specular = vec3(0., 0., 0.);
                 }
-                phong += aFrontColor * (ambient + diffuse) + specular;
-
+                phong += aFrontColor * (ambient + diffuse + specular) ;
             }
             fragcolor = vec4(phong, 1.0);
         }
         gl_Position = uPMatrix * uMVMatrix * vec4(vertex_copy, 1.0);
-        
     }
 
 
@@ -139,23 +217,31 @@
     var analyser;
     var frequencyData = new Uint8Array();
     // rendering method
-    var mode = 1;
+    var mode = 2;
     // modeling and perspective matrixs
     var mvMatrix = mat4.create();
     var pMatrix  = mat4.create();
     // object parameters
-    var obj_names = ["Teapot.json","Kangaroo.json"];
-    var abs_scales = [0.3,5.8];
+    var obj_names = ["Teapot.json","Kangaroo.json","Easter.json"];
+    var abs_scales = [0.3,5.8,3.0];
     var obj_vec = [];
-    var obj_default_trans = [vec3.create([-10.0, -1.0, -30.]), vec3.create([0.0, 0., -30.]),  vec3.create([-15., -1., -37.])];
-    var obj_orientation = [vec3.create([90.0,0.0, 0.0]), vec3.create([0.0,0.0,0.0]), vec3.create([-90., 0., -50.])];
-    var obj_default_rotate = [vec3.create([0., 0., -0.1]), vec3.create([0.,0.,0.1]), vec3.create([-90., 0., -50.])];
-    var obj_default_scale = [vec3.create([1.0, 1.0, 1.0]), vec3.create([1.0, 1.0, 1.0]), vec3.create([5., 5., 5.])];
-    var obj_default_shear = vec3.create([90., 90., 90.]);
+    var obj_shading_mode = [1,1,1];
+    var obj_reflect_mode = [1,1,1];
+    var obj_default_trans = [vec3.create([-10.0, 0., -30.]),vec3.create([0.0, 3.0, -30.]), vec3.create([10.0, 0.0, -30.])];
+    var obj_orientation = [ vec3.create([90.0,0.0, 0.0]),vec3.create([0.0,0.0,0.0]),  vec3.create([0.0, 0., -0.0])];
+    var obj_relOrientation = [vec3.create([0.0,0.0, 0.0]), vec3.create([-90.0,0.0,0.0]), vec3.create([-90.0, 0., 0.])];
+    var obj_default_rotate = [vec3.create([0., 0., 0.01]), vec3.create([0.,0.,0.1]), vec3.create([0.,0.,0.1])];
+    var obj_default_scale = [vec3.create([1.0, 1.0, 1.0]), vec3.create([1.0, 1.0, 1.0]), vec3.create([1.0,1.0,1.0])];
+    var obj_default_shear = [vec3.create([90., 90., 90.]),vec3.create([90., 90., 90.]),vec3.create([90., 90., 90.])];
+    var obj_KdKsSh = [vec3.create([0.52,0.18,20]),vec3.create([0.52,0.18,20]),vec3.create([0.52,0.18,20])];
+    var obj_drawmode = ["s","s","s"]; //s: Solid | w: Wireframe
+    var obj_shear_axis = [1,2,2];
     // light parameters
-    var light_locations = new Float32Array([0., 5., -10., 17., 5., -17., -17., 5., -17.]);
+    var light_fixed_locations = new Float32Array([-20., 5., -20., -10., 5., -17., 20., 5., -17.]);
+    var light_abs_locations = new Float32Array([-20., 5., -20., -10., 5., -17., 20., 5., -17.]);
     var light_colors = new Float32Array([1., 1., 1., 1., 1., 1., 1., 1., 1.])
-    var light_kdkscd = new Float32Array([0.6, 0.3, 20.0, 0.6, 0.3, 20.0, 0.6, 0.3, 20.0]);
+    var light_kdkscd = new Float32Array([0.4, 0.7, 100.0, 0.6, 0.4, 100.0, 0.6, 0.3, 200.0]);
+    var light_act = [true,true,true];
     var ka = 0.1;
     var ambiet_light_color = vec3.create([1., 1., 1.]);
     // animation controls
@@ -163,11 +249,22 @@
     var lastTime = 0;
     var random_light_flag = false;
     var transparent = 1.0;
+    var cam_vertical_fov = 45.0;
+    var cam_far = 100.0;
+    var cam_near = 0.1;
+
+    // Texture arrays (texels)
+    var texels_metal = [];
+    var texels_red = [];
+    var texels_choco = [];
+    var texels_default = [];
 
 
     //*************************************************
     // Initialization functions
     //*************************************************
+
+
     function initGL(canvas) {
         try {
             gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
@@ -242,14 +339,24 @@
         gl.enableVertexAttribArray(shaderProgram.vertexFrontColorAttribute);
         shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
         gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+        shaderProgram.vertexTriNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexTriNormal");
+        gl.enableVertexAttribArray(shaderProgram.vertexTriNormalAttribute);
+
+        shaderProgram.vertexTextureCoordAttribute = gl.getAttribLocation(shaderProgram, "aVTexCoord");
+        console.log("Vertex attrib: %d",shaderProgram.vertexTextureCoordAttribute);
+        gl.enableVertexAttribArray(shaderProgram.vertexTextureCoordAttribute);
+
+
 
         shaderProgram.pMatrixUniform  = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-        gl.uniform1i(gl.getUniformLocation(shaderProgram, "mode"), mode);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, "_shading_mode"), mode);
+        gl.uniform1i(gl.getUniformLocation(shaderProgram, "_reflect_mode"), mode);
+        gl.uniform3fv(gl.getUniformLocation(shaderProgram, "objKdKsSh"), obj_KdKsSh[0]);
 
-        gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightLoc"), light_locations);
+        gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightLoc"), light_abs_locations);
         gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightColor"), light_colors);
-        gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightKdKsCD"), light_kdkscd);
+        //gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightKdKsCD"), light_kdkscd);
         gl.uniform1f(gl.getUniformLocation(shaderProgram, "Ka"), ka);
         gl.uniform3fv(gl.getUniformLocation(shaderProgram, "ambient_color"), ambiet_light_color);
         
@@ -295,6 +402,46 @@
         return sout;
     }
 
+    function computeNormals(vertexPositions){ //
+        const rawpos = new Float32Array(vertexPositions);
+        var normals = new Float32Array(vertexPositions.length);
+        var v1 = vec3.create();
+        var v2 = vec3.create();
+        var vnormal = vec3.create();
+        var v1p = [1,2]; //1,2
+        var v2p = [1,0]; //1,0
+
+        for(var i=0;i<vertexPositions.length;i+=9){
+            // i -> vertex number
+            v1[0]=(rawpos[i+3*v1p[1]]-rawpos[i+3*v1p[0]]); //x part
+            v1[1]=(rawpos[i+3*v1p[1]+1]-rawpos[i+3*v1p[0]+1]); //y part
+            v1[2]=(rawpos[i+3*v1p[1]+2]-rawpos[i+3*v1p[0]+2]); //z part
+
+            v2[0]=(rawpos[i+3*v2p[1]]-rawpos[i+3*v2p[0]]); //x part
+            v2[1]=(rawpos[i+3*v2p[1]+1]-rawpos[i+3*v2p[0]+1]); //y part
+            v2[2]=(rawpos[i+3*v2p[1]+2]-rawpos[i+3*v2p[0]+2]); //z part
+            vec3.cross(v1,v2,vnormal);
+            vec3.normalize(vnormal);
+            for(var j=0;j<3;j++){
+                normals[i+0+j] = vnormal[j];
+                normals[i+3+j] = vnormal[j];
+                normals[i+6+j] = vnormal[j];
+            }
+        }
+        return normals;
+    }
+
+    function getTextureGL(imgArray,imgW,imgH){
+        console.log("TEXTURE GL");
+        console.log(imgArray);
+        var texture = gl.createTexture();
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.bindTexture(gl.TEXTURE_2D,texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, imgW, imgH, 0, gl.RGBA,gl.UNSIGNED_BYTE, imgArray);
+        return texture;
+    }
+
+
     function handleLoaded(obj, objData) {
         obj.VertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, obj.VertexPositionBuffer);
@@ -308,11 +455,47 @@
         obj.VertexNormalBuffer.itemSize = 3;
         obj.VertexNormalBuffer.numItems = objData.vertexNormals.length / 3;
 
+        obj.VertexTriNormalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, obj.VertexTriNormalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, computeNormals(objData.vertexPositions), gl.STATIC_DRAW);
+        obj.VertexTriNormalBuffer.itemSize = 3;
+        obj.VertexTriNormalBuffer.numItems = objData.vertexPositions.length / 3;
+
         obj.VertexFrontColorBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, obj.VertexFrontColorBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(objData.vertexFrontcolors), gl.STATIC_DRAW);
         obj.VertexFrontColorBuffer.itemSize = 3;
         obj.VertexFrontColorBuffer.numItems = objData.vertexFrontcolors.length / 3;
+
+        obj.textureGL = gl.createTexture();
+        obj.VertexTextureCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, obj.VertexTextureCoordBuffer);
+        
+        var texels = new Uint8Array(4*2*2).fill(255);
+        if (obj.name == "Teapot.json"){
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(objData.vertexTextureCoords), gl.STATIC_DRAW);
+            obj.textureGL = getTextureGL(texels,2,2);
+            //console.log(texels_metal);
+            /*
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            console.log(texels);
+            gl.bindTexture(gl.TEXTURE_2D,texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA,gl.UNSIGNED_BYTE, texels);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,gl.NEAREST_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            */
+        }
+        else{
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj.VertexPositionBuffer.numItems*2).fill(0.0), gl.STATIC_DRAW);
+            obj.textureGL = getTextureGL(texels,2,2);
+        }
+
+        obj.VertexTextureCoordBuffer.itemSize = 2;
+        obj.VertexTextureCoordBuffer.numItems = obj.VertexTextureCoordBuffer.length / 2;
+        obj.hasTexture = true;
     }
 
     function loadObj(obj) {
@@ -335,6 +518,33 @@
         request.send();
     }
 
+    function loadImage(imgname) {
+        var img = new Image();
+        img.src = imgname;
+        const canvas = drawImageToCanvas(img);
+        const ctx = canvas.getContext('2d');
+        var result = [];
+        for (var y = 0; y < canvas.height; y++) {
+            result.push([]);
+            for (var x = 0; x < canvas.width; x++) {
+            var data = ctx.getImageData(x, y, 1, 1).data;
+            result[y].push(data[0]);
+            result[y].push(data[1]);
+            result[y].push(data[2]);
+            result[y].push(255);
+            }
+        }
+        return result;
+    }
+
+    function drawImageToCanvas(image) {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        canvas.getContext('2d').drawImage(image, 0, 0, image.width, image.height);
+        return canvas;
+    }
+
     //*************************************************
     // Rendering functions
     //*************************************************
@@ -342,17 +552,13 @@
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clearColor(ka*ambiet_light_color[0], ka*ambiet_light_color[1], ka*ambiet_light_color[2], transparent);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        for(var i=0 ; i<2 ; ++i)
+        for(var i=0 ; i<3 ; ++i)
         {
             if (obj_vec[i].VertexPositionBuffer == null ||  obj_vec[i].VertexNormalBuffer == null || obj_vec[i].VertexFrontColorBuffer == null) {
                 continue;
             }
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, obj_vec[i].pMatrix);
+            mat4.perspective(cam_vertical_fov, gl.viewportWidth/gl.viewportHeight, cam_near, cam_far, obj_vec[i].pMatrix);
             mat4.identity(obj_vec[i].mvMatrix);
-            //mat4.identity(obj_vec[i].invOrient);
-            //obj_vec[i].orientation();
-            //obj_vec[i].translation();
-            //obj_vec[i].orient();
             obj_vec[i].rotation();
             obj_vec[i].animationTransform();
             obj_vec[i].updateAuxiliarOrientation();
@@ -369,14 +575,39 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, obj_vec[i].VertexNormalBuffer);
             gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, obj_vec[i].VertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-            gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightLoc"), light_locations);
+            gl.bindBuffer(gl.ARRAY_BUFFER, obj_vec[i].VertexTriNormalBuffer);
+            gl.vertexAttribPointer(shaderProgram.vertexTriNormalAttribute, obj_vec[i].VertexTriNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+            if (obj_vec[i].hasTexture == true){
+                gl.bindBuffer(gl.ARRAY_BUFFER, obj_vec[i].VertexTextureCoordBuffer);
+                gl.vertexAttribPointer(shaderProgram.vertexTextureCoordAttribute, obj_vec[i].VertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+                gl.bindTexture(gl.TEXTURE_2D,obj_vec[i].textureGL);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,gl.NEAREST_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+            }
+
+            gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightLoc"), light_abs_locations);
             gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightColor"), light_colors);
-            gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightKdKsCD"), light_kdkscd);
+            //gl.uniform3fv(gl.getUniformLocation(shaderProgram, "lightKdKsCD"), light_kdkscd);
             gl.uniform1f(gl.getUniformLocation(shaderProgram, "Ka"), ka);
             gl.uniform3fv(gl.getUniformLocation(shaderProgram, "ambient_color"), ambiet_light_color);
+            gl.uniform3fv(gl.getUniformLocation(shaderProgram, "objKdKsSh"), obj_KdKsSh[i]);
+            
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "_shading_mode"), obj_vec[i].shading_mode);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "_reflect_mode"), obj_vec[i].reflect_mode);
+            gl.uniform1i(gl.getUniformLocation(shaderProgram, "texMap"), 0);
+
 
             gl.uniform1f( gl.getUniformLocation(shaderProgram, "volume"), frequencyData[Math.floor(256 / 7) * i] / 625 );
-            gl.drawArrays(gl.TRIANGLES, 0, obj_vec[i].VertexPositionBuffer.numItems);
+            if(obj_drawmode[i]=="s") gl.drawArrays(gl.TRIANGLES, 0, obj_vec[i].VertexPositionBuffer.numItems);
+            else if (obj_drawmode[i]=="w"){
+                for (var j=0; j<obj_vec[i].VertexPositionBuffer.numItems; j+=3){
+                    gl.drawArrays(gl.LINE_LOOP, j, 3);
+                }
+            }
         }
     }
 
@@ -385,7 +616,7 @@
         var timeNow = new Date().getTime();
         if (lastTime != 0) {
             var elapsed = timeNow - lastTime;
-            for(var i=0; i<2; i++){
+            for(var i=0; i<3; i++){
                 raxis = document.getElementById(i+"_rotAxis").value;
                 if(obj_vec[i].raxis!=parseInt(raxis)){
                     console.log("Axis change to %d",parseInt(raxis));
@@ -397,7 +628,7 @@
 
                 }
                 else{
-                    obj_vec[i].rotate_vec[parseInt(raxis)]+= 0.0; //* elapsed;
+                    obj_vec[i].rotate_vec[parseInt(raxis)]+= 0.7; //* elapsed;
                 }
             }
         }
@@ -422,21 +653,43 @@
     }
 
     function webGLStart() {
+        console.log("WEBGLSTART");
+        var _a = loadImage("./textures/galvanizedTexture.jpg");
+        texels_metal = _a;
+        texels_metal = texels_metal.flat();
+        texels_metal = new Uint8Array(texels_metal);
+
+        _a = loadImage("./textures/red.jpg");
+        texels_red = _a;
+        texels_red = texels_red.flat();
+        texels_red = new Uint8Array(texels_red);
+        console.log(texels_red);
+
+        _a = loadImage("./textures/chocolate.jpg");
+        texels_choco = _a;
+        texels_choco = texels_choco.flat();
+        texels_choco = new Uint8Array(texels_choco);
+
+        texels_default = new Uint8Array(4*2*2).fill(255);
+
+        
+
+        //loadImage("./textures/red.jpg")
+
         var canvas = document.getElementById("ICG-canvas");
         initGL(canvas);
         initShaders();
-        var car = mat4.create();
-        mat4.identity(car);
-        mat4.translate(car,[1.0,2.0,3.0]);
-        console.log(mat4.str(car));
-
-        for(var i=0 ; i<2 ; i+=1){
+        for(var i=0 ; i<3 ; i+=1){
             //console.log(obj_default_trans[i]);
             //console.log(obj_default_rotate[i]);
-            obj_vec.push( new CGObject(i, obj_names[i], obj_default_trans[i], obj_default_rotate[i], vec3.create([1.0,1.0,1.0]), obj_default_shear,obj_orientation[i],abs_scales[i]));
+            obj_vec.push(new CGObject(i, obj_names[i],obj_default_trans[i], obj_default_rotate[i],vec3.create([1.0,1.0,1.0]), obj_default_shear[i],obj_orientation[i],obj_relOrientation[i], abs_scales[i]));
             loadObj(obj_vec[i]);
+            obj_vec[i].shading_mode = obj_shading_mode[i];
+            obj_vec[i].reflect_mode = obj_reflect_mode[i];
             obj_vec[i].orientation();
-            console.log(printArray(obj_vec[i].relmvMatrix,16));
+            console.log(obj_vec[i].reflect_mode);
+            console.log(obj_vec[i].name);
+            //console.log(obj_reflect_mode[i]);
         }
 
         gl.clearColor(ka*ambiet_light_color[0], ka*ambiet_light_color[1], ka*ambiet_light_color[2], transparent);
@@ -448,39 +701,74 @@
     //*************************************************
     // Parsing parameters
     //*************************************************
-    function update_mode(){
-        mode = document.getElementById("shading").value;
-        gl.uniform1i(gl.getUniformLocation(shaderProgram, "mode"), mode);
+    function update_mode(objid){
+        console.log("Updatee... ");
+        var objidInt = parseInt(objid);
+        var mode_val = parseInt(document.getElementById(objid + "_shading_mode").value);
+        obj_vec[objidInt].shading_mode = mode_val;
+
+        mode_val = parseInt(document.getElementById(objid + "_reflect_mode").value);
+        obj_vec[objidInt].reflect_mode = mode_val;
+        console.log(mode);
     }
 
-    function update_ambient_light(paramid){
-        if(paramid == 0) ka = document.getElementById("am_ka").value/100.0;
-        else
-        {
-            ambiet_light_color[0] = document.getElementById("am_lR").value;
-            ambiet_light_color[1] = document.getElementById("am_lG").value;
-            ambiet_light_color[2] = document.getElementById("am_lB").value;
-        }
+    function update_camera(){
+        var hfraw = document.getElementById("hfov").value;
+        cam_vertical_fov = (hfraw-50.0)*(30.0/100.0)+45.0;
+        cam_near = 1.0*(document.getElementById("camnear").value)*(99.9/100.0) + 0.1;
+        cam_far = 1.0*(document.getElementById("camfar").value)*(90.0/100.0) + 10.0;
+        console.log("%f, %f, %f",cam_vertical_fov,cam_near,cam_far);
+    }
+
+    function update_ambient_light(){
+            var _Hcolor = document.getElementById("am_lcolor").value;
+            var _RGBcolor = hexToRgb(_Hcolor);
+            ka = document.getElementById("am_ka").value*0.3/100.0;
+            ambiet_light_color[0] = 1.0*(_RGBcolor.r)/255.0;
+            ambiet_light_color[1] = 1.0*(_RGBcolor.g)/255.0;
+            ambiet_light_color[2] = 1.0*(_RGBcolor.b)/255.0;
     }
 
     function update_light_location(lightid){
-        light_locations[lightid * 3] = document.getElementById(lightid + "_llocX").value;
-        light_locations[lightid * 3 + 1] = document.getElementById(lightid + "_llocY").value;
-        light_locations[lightid * 3 + 2] = document.getElementById(lightid + "_llocZ").value;
+        light_abs_locations[lightid * 3] = light_fixed_locations[lightid * 3] + (document.getElementById(lightid + "_llocX").value-50.0)*14.0/100.0;
+        light_abs_locations[lightid * 3 + 1] = light_fixed_locations[lightid * 3 + 1] + (document.getElementById(lightid + "_llocY").value - 50.0)*14.0/100.0;
+        light_abs_locations[lightid * 3 + 2] = light_fixed_locations[lightid * 3 + 2] + (document.getElementById(lightid + "_llocZ").value -50.0)*14.0/100.0;
     }
 
     function update_light_color(lightid){
-        light_colors[lightid * 3] = document.getElementById(lightid + "_lR").value;
-        light_colors[lightid * 3 + 1] = document.getElementById(lightid + "_lG").value;
-        light_colors[lightid * 3 + 2] = document.getElementById(lightid + "_lB").value;
+        var _Hcolor = document.getElementById(lightid + "_lcolor").value;
+        var act = 1.0;
+        if (light_act[lightid] == true) act = 1.0;
+        else act = 0.0;
+
+        var _RGBcolor =hexToRgb(_Hcolor);
+            console.log(_Hcolor);
+            light_colors[lightid * 3] = act*(_RGBcolor.r)/255.0;
+            light_colors[lightid * 3 + 1] = act*(_RGBcolor.g)/255.0;
+            light_colors[lightid * 3 + 2] = act*(_RGBcolor.b)/255.0;
+    }
+
+    function light_on_off(cbox,lightid){
+        light_act[lightid]=cbox.checked;
+        update_light_color(lightid);
     }
     
     function update_trans(objid){
-        var tx = ((document.getElementById(objid + "_transX").value)*(60.0)/(100.0))-30.0;
-        var ty = ((document.getElementById(objid + "_transY").value)*(60.0)/(100.0))-30.0;
-        var tz = ((document.getElementById(objid + "_transZ").value)*(15-100)/(100.0))-15.0;
-        console.log("TRANS: %f, %f, %f",tx,ty,tz);
-        obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
+        var dx = ((document.getElementById(objid + "_dX").value)*(4.0)/(100.0))-2.0;
+        var dy = ((document.getElementById(objid + "_dY").value)*(4.0)/(100.0))-2.0;
+        var dz = ((document.getElementById(objid + "_dZ").value)*(-10.0)/(100.0))+5.0;
+        var _trans = vec3.create([dx,dy,dz]);
+
+        vec3.add(_trans,obj_default_trans[objid])
+        //obj_default_trans[objid].add(_trans)
+        console.log("TRANS: %f, %f, %f",dx,dy,dz);
+        //obj_vec[objid].translation_vec = vec3.create([tx, ty, tz]);
+        obj_vec[objid].translation_vec = _trans;
+    }
+
+    function update_draw_mode(objid){
+        obj_drawmode[objid] = document.getElementById(objid + "_drawMode").value;
+        console.log(obj_drawmode[objid]);
     }
 
     function update_rotate(objid){
@@ -492,129 +780,293 @@
     }
 
     function update_scale(objid){
-        var sx = ((document.getElementById(objid + "_scaleX").value))*(4.0-0.3)/100.0+0.3;
-        var sy = ((document.getElementById(objid + "_scaleY").value))*(4.0-0.3)/100.0+0.3;
-        var sz = ((document.getElementById(objid + "_scaleZ").value))*(4.0-0.3)/100.0+0.3;
-        obj_vec[objid].scale_vec = vec3.create([sx, sy, sz]);
+        var sx = ((document.getElementById(objid + "_scale").value))*(4.0-0.3)/100.0+0.3;
+        obj_vec[objid].scale_vec = vec3.create([sx, sx, sx]);
+    }
+
+    function update_shear(objid){
+        var angle = 90.0+(document.getElementById(objid + "_shear").value-50.0)*60.0/100.0;
+        var axis = obj_shear_axis[objid];
+        obj_vec[objid].shear_vec[axis]=angle;
+    }
+
+    function update_material(objid){
+        if (1.0*document.getElementById(objid + "_material").value==1.0){
+            // Glossy
+            obj_vec[objid].textureGL = getTextureGL(texels_default,2,2);
+            obj_KdKsSh[objid] = vec3.create([0.55,0.55,300]);
+        }
+        else if (1.0*document.getElementById(objid + "_material").value==2.0){
+            // Matte
+            obj_vec[objid].textureGL = getTextureGL(texels_default,2,2);
+            obj_KdKsSh[objid] = vec3.create([0.52,0.18,20]);
+        }
+        else if (1.0*document.getElementById(objid + "_material").value==3.0){
+            // Metal
+            obj_vec[objid].textureGL = getTextureGL(texels_metal,1024,512);
+            obj_KdKsSh[objid] = vec3.create([0.55,0.55,300]);
+        }
+        else if (1.0*document.getElementById(objid + "_material").value==4.0){
+            // Red
+            obj_vec[objid].textureGL = getTextureGL(texels_red,1024,512);
+            obj_KdKsSh[objid] = vec3.create([0.55,0.55,300]);
+        }
+        else if (1.0*document.getElementById(objid + "_material").value==5.0){
+            // Chocolate
+            obj_vec[objid].textureGL = getTextureGL(texels_choco,1024,512);
+            obj_KdKsSh[objid] = vec3.create([0.55,0.55,300]);
+        }
+    }
+
+    function reset_pose(objid){
+        //console.log("Reset pose %d",objid)
+        var oid = parseInt(objid);
+        obj_vec[oid].orientation();
+        obj_vec[oid].rotate_vec = vec3.create();
     }
     
+    function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
 </script>
 </head>
 
 <body onload="webGLStart();">
+    <style>
+        .buttonstyle {padding:6px;background:rgb(201, 187, 27);color:rgb(27, 26, 26);}
+      </style>
     <audio style="position: absolute; right: 4%; bottom: 30%; z-index: 2;" id="myAudio"></audio>
-    <p style="position: absolute; right: 2%; top:6%; ">
-        <canvas id="ICG-canvas" style="border: none;" width="1060" height="590" ></canvas>
+    <p style="position: absolute; right: 2%; bottom:2%; ">
+                    <canvas id="ICG-canvas" style="border: none;" width="1060" height="590" ></canvas>
     </p>
-    <p style="position: absolute; left: 1%; top: 1%; max-width: 30%; min-width: 30%; ">
+
+    <p style="position: absolute; left: 1%; top: 1%; min-width: 30%; ">
 
         <p>
-            <label for="shading">Gouraud shading 18 49 </label>
+            <label for="shading"><b>[NTU] Introduction to Computer Graphics: Demo</b> (by Paulo Linares)</label>
         </p>
+        <table>
+            <tr>
+                <td><b>Ambient Light &nbsp;</b></td>
+                <td>\(K_a \ ([0.0,0.3])\): <input style="max-width: 70%; vertical-align: middle;" id="am_ka" type="range" autocomplete="off" value="0.1" max="100" min="0" step="any" oninput="update_ambient_light()"></td>
+                <td>Color :<input id="am_lcolor" type="color" autocomplete="off" value="#FFFFFF" oninput="update_ambient_light()"> </input></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td> <b> Light 1 &nbsp;</b> </td>
+                <td> <input id="0_lonoff" type="checkbox" autocomplete="off" checked onchange="light_on_off(this,0)">&nbsp;</input></td>
+                <td>\( \Delta_x \): <input style="max-width: 70%; vertical-align: middle;" id="0_llocX" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(0)"></td>
+                <td>\( \Delta_y \): <input style="max-width: 70%; vertical-align: middle;" id="0_llocY" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(0)"></td>
+                <td>\( \Delta_z \): <input style="max-width: 70%; vertical-align: middle;" id="0_llocZ" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(0)"></td>
+                <td>Color :<input id="0_lcolor" type="color" autocomplete="off" value="#FFFFFF" oninput="update_light_color(0)"></input></td>
+                <td> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</td>
+                <td>
+                    <table>
+                        <th colspan="6"> <b> Camera parameters (clipping)</b> </th>
+                        <tr>
+                            <td> <b>\(\mathbf{FOV}_H\)</b> (\(\mathbf{FOV}_{H0}=45^o\)) &nbsp; <input style="max-width: 70%; vertical-align: middle;" id="hfov" type="range" autocomplete="off" value="50.0" max="100.0" min="0.0" oninput="update_camera()"></td>
+                        </tr>
+                        <tr>
+                            <td><b> Z-Near</b> ([0.1-10]) &nbsp; <input style="max-width: 70%; vertical-align: middle;" id="camnear" type="range" autocomplete="off" value="0.0" max="100.0" min="0.0" oninput="update_camera()"></td>
+                            <td>&nbsp;</td>
+                            <td><b> Z-Far</b> &nbsp;([10-100]) <input style="max-width: 70%; vertical-align: middle;" id="camfar" type="range" autocomplete="off" value="100.0" max="100.0" min="0.0" oninput="update_camera()"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td> <b> Light 2 &nbsp;</b> </td>
+                <td> <input id="1_lonoff" type="checkbox" autocomplete="off" checked onchange="light_on_off(this,1)">&nbsp;</input></td>
+                <td>\( \Delta_x \): <input style="max-width: 70%; vertical-align: middle;" id="1_llocX" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(1)"></td>
+                <td>\( \Delta_y \): <input style="max-width: 70%; vertical-align: middle;" id="1_llocY" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(1)"></td>
+                <td>\( \Delta_z \): <input style="max-width: 70%; vertical-align: middle;" id="1_llocZ" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(1)"></td>
+                <td>Color :<input id="1_lcolor" type="color" autocomplete="off" value="#FFFFFF" oninput="update_light_color(1)"></input></td>
+            </tr>
+        </table>
 
-        </br>
-        <span>Ambient Light</span>
         <table>
             <tr>
-                <td>Ka: <input style="max-width: 70%; vertical-align: middle;" id="am_ka" type="range" autocomplete="off" value="0.1" max="100" min="1" step="any" oninput="update_ambient_light(0)"></td>
+                <td> <b> Light 3 &nbsp;</b> </td>
+                <td> <input id="2_lonoff" type="checkbox" autocomplete="off" checked onchange="light_on_off(this,2)">&nbsp;</input></td>
+                <td>\( \Delta_x \): <input style="max-width: 70%; vertical-align: middle;" id="2_llocX" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(2)"></td>
+                <td>\( \Delta_y \): <input style="max-width: 70%; vertical-align: middle;" id="2_llocY" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(2)"></td>
+                <td>\( \Delta_z \): <input style="max-width: 70%; vertical-align: middle;" id="2_llocZ" type="range" autocomplete="off" value="50." max="100." min="0." oninput="update_light_location(2)"></td>
+                <td>Color :<input id="2_lcolor" type="color" autocomplete="off" value="#FFFFFF" oninput="update_light_color(2)"></input></td>
             </tr>
         </table>
-        </br>
-        <span>Light 0</span>
-        <table>
-            <tr>
-                <td>X: <input style="max-width: 70%; vertical-align: middle;" id="0_llocX" type="range" autocomplete="off" value="0." max="20." min="-20." oninput="update_light_location(0)"></td>
-                <td>Y: <input style="max-width: 70%; vertical-align: middle;" id="0_llocY" type="range" autocomplete="off" value="5." max="20." min="-20." oninput="update_light_location(0)"></td>
-                <td>Z: <input style="max-width: 70%; vertical-align: middle;" id="0_llocZ" type="range" autocomplete="off" value="-10." max="0." min="-75." oninput="update_light_location(0)"></td>
-            </tr>
-        </table>
-        </br>
-        </br>
-        </br>
+    </p>
 
-        <span>Object</span>
+    
+
+    <p style="position: absolute; left: 1%; bottom: 3%">
+        <!-- WIDGETS FOR OBJECT 1 -->
+        <h3>Object 1</h3>
         <table>
-            <tr>
-            <th></th>
-            <th>X axis</th>
-            <th>Y axis</th>
-            <th>Z axis</th>
+            <tr> 
+                <th colspan="6">Relative translation</th>
+                <th>Material</th>
             </tr>
             <tr>
-                <td>Trans.</td>
-                <td><input id="0_transX" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
-                <td><input id="0_transY" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
-                <td><input id="0_transZ" type="range" autocomplete="off" value="0" min="0.0" max="100.0" step="any"  oninput="update_trans(0)"></td>
-            </tr>
-            <tr>
-                <td>Rotate</td>
-                <td><input id="0_rotateX" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any"  oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateY" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
-                <td><input id="0_rotateZ" type="range" autocomplete="off" value="0." min="0.0" max="100.0" step="any" oninput="update_rotate(0)"></td>
+                <td>\[ \Delta_x \]</td><td><input id="0_dX" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
+                <td>\[ \Delta_y \]</td><td><input id="0_dY" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
+                <td>\[ \Delta_z \]</td><td><input id="0_dZ" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(0)"></td>
+                <td> <select id="0_material" autocomplete="off" value="1" onchange="update_material(0)">
+                    <option value="1">Glossy</option>
+                    <option value="2" selected>Matte</option>
+                    <option value="3">Metal</option>
+                    <option value="4">Red</option>
+                    <option value="5">Chocolate</option>
+                </td>
             </tr>
         </table>
-        <span>Animation</span>
         <table>
-            <tr>
-            <th>Object 1</th>
-            </tr>
             <tr>
                 <td>Rotation axis</td>
-                <td><select id="0_rotAxis">
-                    <option value="">--Choose the rotation axis</option>
-                    <option value="0">X</option>
-                    <option value="1">Y</option>
-                    <option value="2"selected>Z</option>
+                <td><select id="0_rotAxis" autocomplete="off" value="2">
+                    <option value="0">&nbsp;X &nbsp;&nbsp; </option>
+                    <option value="1">&nbsp;Y &nbsp;&nbsp;  </option>
+                    <option value="2"selected>&nbsp;Z &nbsp;&nbsp; </option>
                   </select></td>
-                <td><button id="0_resetPose" name="Reset pose"></td>
+                <td><button id="0_resetPose" class="buttonstyle" type="button" onclick="reset_pose(0)">Reset pose</button></td>
+                <td> &nbsp;</td>
+                <td>Scale</td>
+                <td><input id="0_scale" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                <td> &nbsp;</td>
+                <td>Shear</td>
+                <td><input id="0_shear" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="50.0" min="0.0" max="100.0" step="any" oninput="update_shear(0)"></td> 
             </tr>
         </table>
         <table>
+            <tr><td>Shading mode</td><td><select id="0_shading_mode" autocomplete="off" value="1" onchange="update_mode(0)">
+                <option value="1" selected>Flat</option>
+                <option value="2">Gouraud</option>
+                <option value="3">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Reflection model</td><td><select id="0_reflect_mode" autocomplete="off" value="1" onchange="update_mode(0)">
+                <option value="1" selected>Blinn-Phong</option>
+                <option value="2">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Draw mode</td><td><select id="0_drawMode" autocomplete="off" value="s" onchange="update_draw_mode(0)">
+                    <option value="s" selected>Solid</option>
+                    <option value="w">Wireframe</option>
+                </select></td>
+            </tr>
+        </table>
+
+        <!-- WIDGETS FOR OBJECT 2 -->
+        <h3>Object 2</h3>
+        <table>
+            <tr> 
+                <th colspan="6">Relative translation</th>
+                <th>Material</th>
+            </tr>
             <tr>
-                  <td>Scale X</td>
-                  <td><input id="0_scaleX" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
-                  <td>Scale Y</td>
-                  <td><input id="0_scaleY" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
-                  <td>Scale Z</td>
-                  <td><input id="0_scaleZ" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(0)"></td>
+                <td>\[ \Delta_x \]</td><td><input id="1_dX" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(1)"></td>
+                <td>\[ \Delta_y \]</td><td><input id="1_dY" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(1)"></td>
+                <td>\[ \Delta_z \]</td><td><input id="1_dZ" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(1)"></td>
+                <td> <select id="1_material" autocomplete="off" value="1" onchange="update_material(1)">
+                    <option value="1" >Glossy</option>
+                    <option value="2" selected>Matte</option>
+                </td>
             </tr>
         </table>
         <table>
-            <tr>
-            <th>Object 2</th>
-            </tr>
             <tr>
                 <td>Rotation axis</td>
-                <td><select id="1_rotAxis">
-                    <option value="">--Choose the rotation axis</option>
-                    <option value="0">X</option>
-                    <option value="1"selected>Y</option>
-                    <option value="2">Z</option>
+                <td><select id="1_rotAxis" autocomplete="off" value="2">
+                    <option value="0">&nbsp;X &nbsp;&nbsp; </option>
+                    <option value="1">&nbsp;Y &nbsp;&nbsp;  </option>
+                    <option value="2"selected>&nbsp;Z &nbsp;&nbsp; </option>
                   </select></td>
-                <td><button id="1_resetPose" name="Reset pose"></td>
-                </tr>
+                <td><button id="1_resetPose" class="buttonstyle" type="button" onclick="reset_pose(1)">Reset pose</button></td>
+                <td> &nbsp;</td>
+                <td>Scale</td>
+                <td><input id="1_scale" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
+                <td> &nbsp;</td>
+                <td>Shear</td>
+                <td><input id="1_shear" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_shear(1)"></td> 
             </tr>
         </table>
         <table>
-            </tr>
-                  <td>Scale X</td>
-                  <td><input id="1_scaleX" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
-                  <td>Scale Y</td>
-                  <td><input id="1_scaleY" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
-                  <td>Scale Z</td>
-                  <td><input id="1_scaleZ" type="range" style="max-width: 60%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(1)"></td>
+            <tr><td>Shading mode</td><td><select id="1_shading_mode" autocomplete="off" value="1" onchange="update_mode(1)">
+                <option value="1" selected>Flat</option>
+                <option value="2">Gouraud</option>
+                <option value="3">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Reflection model</td><td><select id="1_reflect_mode" autocomplete="off" value="1" onchange="update_mode(1)">
+                <option value="1" selected>Blinn-Phong</option>
+                <option value="2">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Draw mode</td><td><select id="1_drawMode" autocomplete="off" value="s" onchange="update_draw_mode(1)">
+                    <option value="s" selected>Solid</option>
+                    <option value="w">Wireframe</option>
+                </select></td>
             </tr>
         </table>
-            <th>Object 3</th>
+
+        <!-- WIDGETS FOR OBJECT 3 -->
+        <h3>Object 3</h3>
+        <table>
+            <tr> 
+                <th colspan="6">Relative translation</th>
+                <th>Material</th>
             </tr>
             <tr>
+                <td>\[ \Delta_x \]</td><td><input id="2_dX" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(2)"></td>
+                <td>\[ \Delta_y \]</td><td><input id="2_dY" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(2)"></td>
+                <td>\[ \Delta_z \]</td><td><input id="2_dZ" type="range" style="max-width: 55%" orient="horizontal" autocomplete="off" value="50" min="0.0" max="100.0" step="any" oninput="update_trans(2)"></td>
+                <td> <select id="2_material" autocomplete="off" value="1" onchange="update_material(2)">
+                    <option value="1">Glossy</option>
+                    <option value="2" selected>Matte</option>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
                 <td>Rotation axis</td>
-                <td><select id="2_rotAxis">
-                    <option value="">--Choose the rotation axis</option>
-                    <option value="0">X</option>
-                    <option value="1">Y</option>
-                    <option value="2"selected>Z</option>
+                <td><select id="2_rotAxis" autocomplete="off" value="2">
+                    <option value="0">&nbsp;X &nbsp;&nbsp; </option>
+                    <option value="1">&nbsp;Y &nbsp;&nbsp;  </option>
+                    <option value="2"selected>&nbsp;Z &nbsp;&nbsp; </option>
                   </select></td>
+                <td><button id="2_resetPose" class="buttonstyle" type="button" onclick="reset_pose(2)">Reset pose</button></td>
+                <td> &nbsp;</td>
+                <td>Scale</td>
+                <td><input id="2_scale" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="19" min="0.0" max="100.0" step="any" oninput="update_scale(2)"></td>
+                <td> &nbsp;</td>
+                <td>Shear</td>
+                <td><input id="2_shear" type="range" style="max-width: 40%" orient="horizontal" autocomplete="off" value="50.0" min="0.0" max="100.0" step="any" oninput="update_shear(2)"></td> 
+            </tr>
+        </table>
+        <table>
+            <tr><td>Shading mode</td><td><select id="2_shading_mode" autocomplete="off" value="1" onchange="update_mode(2)">
+                <option value="1" selected>Flat</option>
+                <option value="2">Gouraud</option>
+                <option value="3">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Reflection model</td><td><select id="2_reflect_mode" autocomplete="off" value="1" onchange="update_mode(2)">
+                <option value="1" selected>Blinn-Phong</option>
+                <option value="2">Phong</option>
+                </select></td>
+                <td> &nbsp; &nbsp;</td>
+                <td>Draw mode</td><td><select id="2_drawMode" autocomplete="off" value="s" onchange="update_draw_mode(2)">
+                    <option value="s" selected>Solid</option>
+                    <option value="w">Wireframe</option>
+                </select></td>
             </tr>
         </table>
     </p>
